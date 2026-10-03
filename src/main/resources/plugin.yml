@@ -1,7 +1,7 @@
 name: rExpLevel
-version: '1.0'
-main: ru.truhot.rexplevel.RExpLevel
+version: '1.2'
+main: ru.rulhot.rexplevel.RExpLevel
 api-version: '1.21.4'
 folia-supported: true
-authors: [Truhot]
+authors: [ Rulhot ]
 softdepend: [PlaceholderAPI]

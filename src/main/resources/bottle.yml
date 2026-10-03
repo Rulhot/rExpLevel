@@ -16,9 +16,13 @@ bottle:
   require-glass-bottle: true
   # Как забирать опыт: DRINK — ПКМ, THROW — кидок как обычный пузырёк.
   redeem: DRINK
+  # Как начисляется опыт из бутылочки:
+  # ADD — уровни плюсуются к текущим (15 lvl + бутылка 30 lvl = 45 lvl).
+  # FOLD — опыт считается в XP, как в ванилле (15 lvl + бутылка 30 lvl ≈ 33 lvl).
+  exp-give: FOLD
 
 experience:
   # Сколько XP тратится и даётся за один обычный пузырёк опыта.
   xp-per-bottle: 7
 
-config-version: 1 #не трогать!!!
+config-version: 2 #не трогать!!!
