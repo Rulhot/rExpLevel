@@ -88,17 +88,29 @@ public final class PlayerSettingsManager {
         return current.mode();
     }
 
+    public @Nullable Integer getBottleLevels(@NotNull UUID playerUuid) {
+        PlayerSettings current = settings.get(playerUuid);
+        return current == null ? null : current.levels();
+    }
+
     public void setAutoEnabled(@NotNull UUID playerUuid, boolean enabled) {
         settings.compute(playerUuid, (uuid, current) -> current == null
-                ? new PlayerSettings(enabled, null)
-                : new PlayerSettings(enabled, current.mode()));
+                ? new PlayerSettings(enabled, null, null)
+                : new PlayerSettings(enabled, current.mode(), current.levels()));
         markDirty();
     }
 
     public void setBottleMode(@NotNull UUID playerUuid, @NotNull BottleMode mode) {
         settings.compute(playerUuid, (uuid, current) -> current == null
-                ? new PlayerSettings(null, mode)
-                : new PlayerSettings(current.autoEnabled(), mode));
+                ? new PlayerSettings(null, mode, null)
+                : new PlayerSettings(current.autoEnabled(), mode, current.levels()));
+        markDirty();
+    }
+
+    public void setBottleLevels(@NotNull UUID playerUuid, int levels) {
+        settings.compute(playerUuid, (uuid, current) -> current == null
+                ? new PlayerSettings(null, null, levels)
+                : new PlayerSettings(current.autoEnabled(), current.mode(), levels));
         markDirty();
     }
 
@@ -143,6 +155,9 @@ public final class PlayerSettingsManager {
             if (value.mode() != null) {
                 yaml.set(path + ".mode", value.mode().name());
             }
+            if (value.levels() != null) {
+                yaml.set(path + ".levels", value.levels());
+            }
         }
         return yaml;
     }
@@ -171,10 +186,13 @@ public final class PlayerSettingsManager {
         }
         Boolean auto = section.isBoolean("auto") ? section.getBoolean("auto") : null;
         BottleMode mode = BottleMode.find(section.getString("mode"));
-        if (auto == null && mode == null) {
+        Integer levels = section.isInt("levels") && section.getInt("levels") > 0
+                ? Integer.valueOf(section.getInt("levels"))
+                : null;
+        if (auto == null && mode == null && levels == null) {
             return;
         }
-        settings.put(playerUuid, new PlayerSettings(auto, mode));
+        settings.put(playerUuid, new PlayerSettings(auto, mode, levels));
     }
 
     private void backupBroken(@NotNull Path file) {
@@ -199,6 +217,10 @@ public final class PlayerSettingsManager {
         }
     }
 
-    private record PlayerSettings(@Nullable Boolean autoEnabled, @Nullable BottleMode mode) {
+    private record PlayerSettings(
+            @Nullable Boolean autoEnabled,
+            @Nullable BottleMode mode,
+            @Nullable Integer levels
+    ) {
     }
 }

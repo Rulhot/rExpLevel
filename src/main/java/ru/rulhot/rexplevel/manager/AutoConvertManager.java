@@ -3,9 +3,11 @@ package ru.rulhot.rexplevel.manager;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import ru.rulhot.rexplevel.model.AutoSettings.ConfigureStatus;
 import ru.rulhot.rexplevel.model.AutoSettings.ConvertResult;
 import ru.rulhot.rexplevel.model.AutoSettings.ModeSettings;
+import ru.rulhot.rexplevel.model.BottleSettings;
 import ru.rulhot.rexplevel.model.BottleSettings.BottleMode;
 import ru.rulhot.rexplevel.model.BottleSettings.PackStatus;
 import ru.rulhot.rexplevel.util.ExperienceUtil;
@@ -35,10 +37,20 @@ public final class AutoConvertManager {
         return playerSettings.getBottleMode(player.getUniqueId(), config.auto().defaultMode());
     }
 
+    public int bottleLevels(@NotNull Player player) {
+        Integer chosen = playerSettings.getBottleLevels(player.getUniqueId());
+        BottleSettings bottle = config.bottle();
+        if (chosen != null && chosen <= bottle.maxLevels() && bottle.allowed(chosen)) {
+            return chosen;
+        }
+        return config.auto().bottle().bottleLevels();
+    }
+
     public @NotNull ConfigureStatus configure(
             @NotNull Player player,
             boolean enabled,
-            @NotNull BottleMode mode
+            @NotNull BottleMode mode,
+            @Nullable Integer levels
     ) {
         UUID playerUuid = player.getUniqueId();
         if (!playerSettings.isReady()) {
@@ -49,14 +61,22 @@ public final class AutoConvertManager {
         ModeSettings modeSettings = config.auto().mode(mode);
 
         if (enabled) {
-            if (currentlyEnabled && currentMode == mode) {
+            boolean sameLevels = levels == null || levels == bottleLevels(player);
+            if (currentlyEnabled && currentMode == mode && sameLevels) {
                 return ConfigureStatus.ALREADY_ENABLED;
+            }
+            if (currentlyEnabled && currentMode == mode) {
+                playerSettings.setBottleLevels(playerUuid, levels);
+                return ConfigureStatus.ENABLED;
             }
             if (currentlyEnabled) {
                 return ConfigureStatus.MODE_CONFLICT;
             }
             if (modeSettings.requireGlassBottle() && ExperienceUtil.Glass.count(player) <= 0) {
                 return ConfigureStatus.NO_GLASS;
+            }
+            if (levels != null) {
+                playerSettings.setBottleLevels(playerUuid, levels);
             }
             playerSettings.setBottleMode(playerUuid, mode);
             playerSettings.setAutoEnabled(playerUuid, true);
@@ -135,7 +155,7 @@ public final class AutoConvertManager {
         }
         int surplus = surplusPoints(player, settings);
         return switch (mode) {
-            case BOTTLE -> bottles.affordable(player, settings.bottleLevels(), settings.keepLevels()) > 0;
+            case BOTTLE -> bottles.affordable(player, bottleLevels(player), settings.keepLevels()) > 0;
             case EXPERIENCE -> surplus >= config.xpPerExperienceBottle();
         };
     }
@@ -151,8 +171,9 @@ public final class AutoConvertManager {
     }
 
     private int packCustom(@NotNull Player player, @NotNull ModeSettings settings) {
+        int levels = bottleLevels(player);
         int amount = Math.min(
-                bottles.affordable(player, settings.bottleLevels(), settings.keepLevels()),
+                bottles.affordable(player, levels, settings.keepLevels()),
                 settings.maxBottlesPerCycle()
         );
         amount = limitByGlass(player, amount, settings);
@@ -162,7 +183,7 @@ public final class AutoConvertManager {
         }
         return bottles.pack(
                 player,
-                settings.bottleLevels(),
+                levels,
                 amount,
                 settings.requireGlassBottle()
         ) == PackStatus.SUCCESS ? amount : 0;

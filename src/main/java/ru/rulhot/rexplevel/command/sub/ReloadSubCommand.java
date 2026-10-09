@@ -64,6 +64,6 @@ public final class ReloadSubCommand implements SubCommand {
     }
 
     private void send(@NotNull CommandSender sender, @NotNull String key) {
-        sender.sendMessage(MessageUtil.parseText(config.getCommandMessage(key)));
+        MessageUtil.send(sender, config.getCommandMessage(key));
     }
 }

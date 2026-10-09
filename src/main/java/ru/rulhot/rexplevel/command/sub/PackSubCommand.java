@@ -11,6 +11,7 @@ import ru.rulhot.rexplevel.manager.ConfigManager;
 import ru.rulhot.rexplevel.manager.ExperienceBottleManager;
 import ru.rulhot.rexplevel.manager.ExperienceBottleManager.Result;
 import ru.rulhot.rexplevel.model.BottleSettings;
+import ru.rulhot.rexplevel.model.BottleSettings.ExpGive;
 import ru.rulhot.rexplevel.model.BottleSettings.PackStatus;
 import ru.rulhot.rexplevel.util.ExperienceUtil;
 import ru.rulhot.rexplevel.util.MessageUtil;
@@ -19,6 +20,8 @@ import ru.rulhot.rexplevel.util.SchedulerUtil;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 public final class PackSubCommand implements SubCommand {
@@ -68,17 +71,24 @@ public final class PackSubCommand implements SubCommand {
             @NotNull CommandSender sender,
             @NotNull String[] args
     ) {
-        if (args.length == 1) {
-            String input = args[0].toLowerCase(Locale.ROOT);
-            return List.of("bottle", "experience").stream()
-                    .filter(value -> value.startsWith(input))
-                    .toList();
+        switch (args.length) {
+            case 1: {
+                String input = args[0].toLowerCase(Locale.ROOT);
+                return Stream.of("bottle", "experience")
+                        .filter(value -> value.startsWith(input))
+                        .toList();
+            }
+            case 2: {
+                String input = args[1].toLowerCase(Locale.ROOT);
+                Stream<String> values = args[0].equalsIgnoreCase("experience")
+                        ? Stream.of("all")
+                        : config.bottle().presets().keySet().stream().map(String::valueOf);
+                return values.filter(value -> value.startsWith(input)).toList();
+            }
+            default: {
+                return List.of();
+            }
         }
-        if (args.length == 2 && args[0].equalsIgnoreCase("experience")) {
-            String input = args[1].toLowerCase(Locale.ROOT);
-            return "all".startsWith(input) ? List.of("all") : List.of();
-        }
-        return List.of();
     }
 
     private boolean packBottle(@NotNull Player player, @NotNull String[] args) {
@@ -91,6 +101,19 @@ public final class PackSubCommand implements SubCommand {
         BottleSettings settings = config.bottle();
         if (levels > settings.maxLevels()) {
             send(player, "levels-limit", Map.of("max", settings.maxLevels()));
+            return true;
+        }
+        if (amount > BottleSettings.MAX_AMOUNT) {
+            send(player, "amount-limit", Map.of("max", BottleSettings.MAX_AMOUNT));
+            return true;
+        }
+        if (!settings.allowed(levels)) {
+            send(player, "pack.levels-not-allowed", Map.of(
+                    "value", levels,
+                    "levels", settings.presets().keySet().stream()
+                            .map(String::valueOf)
+                            .collect(Collectors.joining(", "))
+            ));
             return true;
         }
         scheduler.runFor(player, () -> packCustom(player, levels, amount));
@@ -120,6 +143,13 @@ public final class PackSubCommand implements SubCommand {
         PackStatus status = bottles.pack(player, levels, amount);
         if (status == PackStatus.NO_GLASS) {
             send(player, "pack.no-glass");
+            return;
+        }
+        if (status != PackStatus.SUCCESS && config.bottle().expGive() == ExpGive.ADD) {
+            send(player, "pack.not-enough-levels", Map.of(
+                    "required", (long) levels * amount,
+                    "current", player.getLevel()
+            ));
             return;
         }
         if (status != PackStatus.SUCCESS) {
@@ -169,6 +199,6 @@ public final class PackSubCommand implements SubCommand {
             @NotNull String key,
             @NotNull Map<String, ?> placeholders
     ) {
-        sender.sendMessage(MessageUtil.parseText(config.formatCommandMessage(key, placeholders)));
+        MessageUtil.send(sender, config.formatCommandMessage(key, placeholders));
     }
 }

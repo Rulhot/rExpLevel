@@ -10,8 +10,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import ru.rulhot.rexplevel.model.BottleSettings;
 import ru.rulhot.rexplevel.model.BottleSettings.ExpGive;
+import ru.rulhot.rexplevel.model.BottleSettings.Look;
 import ru.rulhot.rexplevel.model.BottleSettings.PackStatus;
 import ru.rulhot.rexplevel.util.ExperienceUtil;
 import ru.rulhot.rexplevel.util.MessageUtil;
@@ -26,24 +26,24 @@ public final class BottleManager {
     private final @NotNull ConfigManager config;
 
     public @NotNull ItemStack create(int levels, int amount) {
-        BottleSettings settings = config.bottle();
+        Look look = config.bottle().look(levels);
         int points = ExperienceUtil.pointsAtLevel(levels);
         Map<String, Object> placeholders = Map.of(
                 "levels", levels,
                 "points", points
         );
-        ItemStack item = new ItemStack(settings.material(), amount);
+        ItemStack item = new ItemStack(look.material(), amount);
         item.editMeta(meta -> {
-            meta.displayName(MessageUtil.parseText(config.format(settings.name(), placeholders)));
-            meta.lore(MessageUtil.parseText(settings.lore().stream()
+            meta.displayName(MessageUtil.parseText(config.format(look.name(), placeholders)));
+            meta.lore(MessageUtil.parseText(look.lore().stream()
                     .map(line -> config.format(line, placeholders))
                     .toList()));
             meta.getPersistentDataContainer().set(pointsKey, PersistentDataType.INTEGER, points);
             meta.getPersistentDataContainer().set(levelsKey, PersistentDataType.INTEGER, levels);
-            if (settings.customModelData() > 0) {
-                meta.setCustomModelData(settings.customModelData());
+            if (look.customModelData() > 0) {
+                meta.setCustomModelData(look.customModelData());
             }
-            meta.setEnchantmentGlintOverride(settings.glint());
+            meta.setEnchantmentGlintOverride(look.glint());
         });
         return item;
     }
@@ -91,7 +91,6 @@ public final class BottleManager {
         return PackStatus.SUCCESS;
     }
 
-    /** Сколько бутылочек по {@code levels} ур. можно упаковать, оставив игроку {@code keepLevels} ур. */
     public int affordable(@NotNull Player player, int levels, int keepLevels) {
         if (config.bottle().expGive() == ExpGive.ADD) {
             return Math.max(0, player.getLevel() - keepLevels) / levels;
@@ -101,7 +100,7 @@ public final class BottleManager {
     }
 
     public void give(@NotNull Player player, int levels, int amount) {
-        int maxStack = config.bottle().material().getMaxStackSize();
+        int maxStack = config.bottle().look(levels).material().getMaxStackSize();
         int left = amount;
         while (left > 0) {
             int stackSize = Math.min(left, maxStack);
@@ -134,7 +133,6 @@ public final class BottleManager {
         return bottlePoints;
     }
 
-    // ponytail: ванильное слияние сфер может склеить её с обычной сферой того же размера — та пропадёт при подборе.
     public void spawnLevelOrb(@NotNull Location location, int points, int levels) {
         location.getWorld().spawn(location, ExperienceOrb.class, orb -> {
             orb.setExperience(points);

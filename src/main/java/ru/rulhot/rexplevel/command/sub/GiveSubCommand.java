@@ -58,6 +58,10 @@ public final class GiveSubCommand implements SubCommand {
             send(sender, "levels-limit", Map.of("max", settings.maxLevels()));
             return true;
         }
+        if (amount > BottleSettings.MAX_AMOUNT) {
+            send(sender, "amount-limit", Map.of("max", BottleSettings.MAX_AMOUNT));
+            return true;
+        }
         scheduler.runGlobal(() -> findAndGive(sender, args[0], levels, amount));
         return true;
     }
@@ -67,15 +71,25 @@ public final class GiveSubCommand implements SubCommand {
             @NotNull CommandSender sender,
             @NotNull String[] args
     ) {
-        if (args.length != 1) {
-            return List.of();
+        switch (args.length) {
+            case 1: {
+                String input = args[0].toLowerCase(Locale.ROOT);
+                return plugin.getServer().getOnlinePlayers().stream()
+                        .map(Player::getName)
+                        .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(input))
+                        .sorted(String.CASE_INSENSITIVE_ORDER)
+                        .toList();
+            }
+            case 2: {
+                return config.bottle().presets().keySet().stream()
+                        .map(String::valueOf)
+                        .filter(value -> value.startsWith(args[1]))
+                        .toList();
+            }
+            default: {
+                return List.of();
+            }
         }
-        String input = args[0].toLowerCase(Locale.ROOT);
-        return plugin.getServer().getOnlinePlayers().stream()
-                .map(Player::getName)
-                .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(input))
-                .sorted(String.CASE_INSENSITIVE_ORDER)
-                .toList();
     }
 
     private void findAndGive(
@@ -136,6 +150,6 @@ public final class GiveSubCommand implements SubCommand {
             @NotNull String key,
             @NotNull Map<String, ?> placeholders
     ) {
-        sender.sendMessage(MessageUtil.parseText(config.formatCommandMessage(key, placeholders)));
+        MessageUtil.send(sender, config.formatCommandMessage(key, placeholders));
     }
 }

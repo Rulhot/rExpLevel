@@ -25,7 +25,7 @@ public final class HelpSubCommand implements SubCommand {
     @Override
     public boolean execute(@NotNull CommandSender sender, @NotNull String[] args) {
         if (!sender.hasPermission(getPermission())) {
-            sender.sendMessage(MessageUtil.parseText(config.getCommandMessage("no-permission")));
+            MessageUtil.send(sender, config.getCommandMessage("no-permission"));
             return true;
         }
         config.getCommandMessages("help").stream()

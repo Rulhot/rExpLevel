@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public record BottleSettings(
         @NotNull Material material,
@@ -16,8 +17,30 @@ public record BottleSettings(
         int maxLevels,
         boolean requireGlassBottle,
         @NotNull RedeemMode redeem,
-        @NotNull ExpGive expGive
+        @NotNull ExpGive expGive,
+        boolean create,
+        @NotNull Map<Integer, Look> presets
 ) {
+
+    public static final int MAX_AMOUNT = 2304;
+
+    public @NotNull Look look(int levels) {
+        Look preset = presets.get(levels);
+        return preset == null ? new Look(material, name, lore, glint, customModelData) : preset;
+    }
+
+    public boolean allowed(int levels) {
+        return create || presets.containsKey(levels);
+    }
+
+    public record Look(
+            @NotNull Material material,
+            @NotNull String name,
+            @NotNull List<String> lore,
+            boolean glint,
+            int customModelData
+    ) {
+    }
 
     public enum ExpGive {
         ADD,

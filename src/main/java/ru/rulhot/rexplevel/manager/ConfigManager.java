@@ -2,6 +2,7 @@ package ru.rulhot.rexplevel.manager;
 
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -13,6 +14,7 @@ import ru.rulhot.rexplevel.model.AutoSettings.Trigger;
 import ru.rulhot.rexplevel.model.BottleSettings;
 import ru.rulhot.rexplevel.model.BottleSettings.BottleMode;
 import ru.rulhot.rexplevel.model.BottleSettings.ExpGive;
+import ru.rulhot.rexplevel.model.BottleSettings.Look;
 import ru.rulhot.rexplevel.model.BottleSettings.RedeemMode;
 import ru.rulhot.rexplevel.model.CommandSettings;
 import ru.rulhot.rexplevel.util.logger.Logger;
@@ -22,13 +24,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
-import java.util.ArrayList;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 @RequiredArgsConstructor
@@ -37,11 +43,11 @@ public final class ConfigManager {
     private static final Pattern COMMAND_NAME = Pattern.compile("^[a-z0-9_]{1,32}$");
     private static final Map<String, Integer> VERSIONS = Map.of(
             "config.yml", 1,
-            "bottle.yml", 2,
+            "bottle.yml", 3,
             "auto.yml", 1,
-            "messages.yml", 2
+            "messages.yml", 3
     );
-    private static final Set<String> IGNORED_ROOTS = Set.of();
+    private static final Set<String> IGNORED_ROOTS = Set.of("bottles");
 
     private final @NotNull JavaPlugin plugin;
 
@@ -86,6 +92,7 @@ public final class ConfigManager {
         );
         AutoSettings loadedAuto = readAuto(loadedAutoConfig);
         CommandSettings loadedCommands = readCommands(loadedConfig);
+        warnConflicts(loadedBottle, loadedAuto);
 
         snapshot = new Snapshot(
                 loadedConfig,
@@ -204,13 +211,15 @@ public final class ConfigManager {
 
         YamlConfiguration ordered = new YamlConfiguration();
         ordered.options().parseComments(true);
+        ordered.options().width(Integer.MAX_VALUE);
 
         for (String key : defaults.getKeys(true)) {
             if (defaults.isConfigurationSection(key) || "config-version".equals(key)) {
                 continue;
             }
             String root = key.split("\\.", 2)[0];
-            if (IGNORED_ROOTS.contains(root)) {
+            if (IGNORED_ROOTS.contains(root) && yaml.contains(root)) {
+                copyRoot(yaml, ordered, root);
                 continue;
             }
             if (yaml.contains(key)) {
@@ -234,8 +243,34 @@ public final class ConfigManager {
         copyComments(defaults, ordered);
         copyComments(yaml, ordered);
 
-        ordered.save(file);
+        Path target = file.toPath();
+        Path temporary = target.resolveSibling(target.getFileName() + ".tmp");
+        Files.copy(target, target.resolveSibling(target.getFileName() + ".bak"),
+                StandardCopyOption.REPLACE_EXISTING);
+        Files.writeString(temporary, ordered.saveToString(), StandardCharsets.UTF_8);
+        try {
+            Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        } catch (AtomicMoveNotSupportedException exception) {
+            Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING);
+        }
+        Logger.info("Файл " + name + " обновлён до версии " + latest
+                + ", прежний сохранён как " + name + ".bak");
         yaml.load(file);
+    }
+
+    private void copyRoot(
+            @NotNull YamlConfiguration source,
+            @NotNull YamlConfiguration target,
+            @NotNull String root
+    ) {
+        if (target.contains(root)) {
+            return;
+        }
+        for (String key : source.getKeys(true)) {
+            if (key.startsWith(root + ".") && !source.isConfigurationSection(key)) {
+                target.set(key, source.get(key));
+            }
+        }
     }
 
     private void copyComments(@NotNull YamlConfiguration source, @NotNull YamlConfiguration target) {
@@ -288,23 +323,100 @@ public final class ConfigManager {
     }
 
     private @NotNull BottleSettings readBottle(@NotNull YamlConfiguration yaml) {
-        Material material = Material.matchMaterial(yaml.getString("bottle.material", "EXPERIENCE_BOTTLE"));
-        if (material == null || !material.isItem()) {
-            Logger.warn("Некорректный материал бутылочки, используется EXPERIENCE_BOTTLE");
-            material = Material.EXPERIENCE_BOTTLE;
-        }
-
-        return new BottleSettings(
-                material,
+        Look look = new Look(
+                readMaterial(yaml.getString("bottle.material"), Material.EXPERIENCE_BOTTLE, "bottle.material"),
                 yaml.getString("bottle.name", ""),
                 List.copyOf(yaml.getStringList("bottle.lore")),
                 yaml.getBoolean("bottle.glint", true),
-                Math.max(0, yaml.getInt("bottle.custom-model-data")),
-                Math.clamp(yaml.getInt("bottle.max-levels", 500), 1, 1000),
+                Math.max(0, yaml.getInt("bottle.custom-model-data"))
+        );
+        int maxLevels = Math.clamp(yaml.getInt("bottle.max-levels", 500), 1, 1000);
+
+        return new BottleSettings(
+                look.material(),
+                look.name(),
+                look.lore(),
+                look.glint(),
+                look.customModelData(),
+                maxLevels,
                 yaml.getBoolean("bottle.require-glass-bottle", true),
                 readBottleRedeem(yaml.getString("bottle.redeem")),
-                readExpGive(yaml.getString("bottle.exp-give"))
+                readExpGive(yaml.getString("bottle.exp-give")),
+                yaml.getBoolean("bottle-create"),
+                readPresets(yaml.getConfigurationSection("bottles"), look, maxLevels)
         );
+    }
+
+    private @NotNull Map<Integer, Look> readPresets(
+            @Nullable ConfigurationSection section,
+            @NotNull Look fallback,
+            int maxLevels
+    ) {
+        if (section == null) {
+            return Map.of();
+        }
+        Map<Integer, Look> presets = new TreeMap<>();
+        for (String key : section.getKeys(false)) {
+            ConfigurationSection preset = section.getConfigurationSection(key);
+            Integer levels = parseLevels(key, maxLevels);
+            if (preset == null || levels == null) {
+                Logger.warn("Пропущена бутылочка bottles." + key
+                        + ": ключ должен быть уровнем от 1 до " + maxLevels);
+                continue;
+            }
+            String path = "bottles." + key;
+            presets.put(levels, new Look(
+                    readMaterial(preset.getString("material"), fallback.material(), path + ".material"),
+                    preset.getString("name", fallback.name()),
+                    preset.isList("lore") ? List.copyOf(preset.getStringList("lore")) : fallback.lore(),
+                    preset.getBoolean("glint", fallback.glint()),
+                    Math.max(0, preset.getInt("custom-model-data", fallback.customModelData()))
+            ));
+        }
+        return Collections.unmodifiableMap(presets);
+    }
+
+    private @Nullable Integer parseLevels(@NotNull String raw, int maxLevels) {
+        try {
+            int levels = Integer.parseInt(raw.trim());
+            return levels >= 1 && levels <= maxLevels ? levels : null;
+        } catch (NumberFormatException exception) {
+            return null;
+        }
+    }
+
+    private @NotNull Material readMaterial(
+            @Nullable String raw,
+            @NotNull Material fallback,
+            @NotNull String path
+    ) {
+        if (raw == null || raw.isBlank()) {
+            return fallback;
+        }
+        Material material = Material.matchMaterial(raw);
+        if (material == null || !material.isItem() || material.isAir()) {
+            Logger.warn("Некорректный " + path + ": " + raw + ", используется " + fallback);
+            return fallback;
+        }
+        return material;
+    }
+
+    private void warnConflicts(@NotNull BottleSettings bottle, @NotNull AutoSettings auto) {
+        int autoLevels = auto.bottle().bottleLevels();
+        if (autoLevels > bottle.maxLevels()) {
+            Logger.warn("auto-convert.bottle.bottle-levels (" + autoLevels
+                    + ") больше bottle.max-levels (" + bottle.maxLevels() + ")");
+        }
+        if (bottle.create()) {
+            return;
+        }
+        if (bottle.presets().isEmpty()) {
+            Logger.warn("bottle-create: false и секция bottles пуста, pack bottle недоступен игрокам");
+        }
+        if (!bottle.presets().containsKey(autoLevels)) {
+            Logger.warn("auto-convert.bottle.bottle-levels (" + autoLevels
+                    + ") нет в секции bottles, автоконвертация выдаёт бутылочку общего вида");
+        }
     }
 
     private @NotNull ExpGive readExpGive(@Nullable String raw) {
@@ -425,7 +537,9 @@ public final class ConfigManager {
                 500,
                 true,
                 RedeemMode.DRINK,
-                ExpGive.FOLD
+                ExpGive.FOLD,
+                false,
+                Map.of()
         );
     }
 

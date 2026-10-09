@@ -1,6 +1,7 @@
 package ru.rulhot.rexplevel.listener;
 
 import lombok.RequiredArgsConstructor;
+import com.destroystokyo.paper.event.entity.ExperienceOrbMergeEvent;
 import com.destroystokyo.paper.event.player.PlayerPickupExperienceEvent;
 import org.bukkit.Material;
 import org.bukkit.entity.ExperienceOrb;
@@ -34,9 +35,6 @@ public final class BottleListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onUse(@NotNull PlayerInteractEvent event) {
-        if (config.bottle().redeem() != RedeemMode.DRINK) {
-            return;
-        }
         if (event.useItemInHand() == Event.Result.DENY) {
             return;
         }
@@ -58,7 +56,7 @@ public final class BottleListener implements Listener {
         }
 
         if (!mainBottle && main.getType() == Material.EXPERIENCE_BOTTLE) {
-            if (hand == EquipmentSlot.OFF_HAND) {
+            if (hand == EquipmentSlot.OFF_HAND || throwable(off)) {
                 return;
             }
             deny(event);
@@ -66,7 +64,8 @@ public final class BottleListener implements Listener {
             return;
         }
 
-        if (!bottles.isBottle(event.getItem())) {
+        ItemStack used = event.getItem();
+        if (!bottles.isBottle(used) || throwable(used)) {
             return;
         }
         deny(event);
@@ -124,6 +123,17 @@ public final class BottleListener implements Listener {
         bottles.redeem(player, orb.getExperience(), levels);
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onMerge(@NotNull ExperienceOrbMergeEvent event) {
+        if (bottles.orbLevels(event.getMergeTarget()) > 0 || bottles.orbLevels(event.getMergeSource()) > 0) {
+            event.setCancelled(true);
+        }
+    }
+
+    private boolean throwable(@NotNull ItemStack item) {
+        return config.bottle().redeem() == RedeemMode.THROW && item.getType() == Material.EXPERIENCE_BOTTLE;
+    }
+
     private void deny(@NotNull PlayerInteractEvent event) {
         event.setUseItemInHand(Event.Result.DENY);
         event.setUseInteractedBlock(Event.Result.DENY);
@@ -145,6 +155,6 @@ public final class BottleListener implements Listener {
             @NotNull String key,
             @NotNull Map<String, ?> placeholders
     ) {
-        sender.sendMessage(MessageUtil.parseText(config.formatCommandMessage(key, placeholders)));
+        MessageUtil.send(sender, config.formatCommandMessage(key, placeholders));
     }
 }

@@ -96,18 +96,20 @@ public final class ExperienceListener implements Listener {
             }
             ConvertResult result = autoConvert.convert(player);
             if (result.disabledNoGlass()) {
-                player.sendMessage(MessageUtil.parseText(
+                MessageUtil.send(
+                        player,
                         config.formatCommandMessage("auto.disabled-no-glass", Map.of())
-                ));
+                );
                 return;
             }
             if (result.bottles() > 0) {
                 String key = result.mode() == BottleMode.BOTTLE
                         ? "auto.packed-bottle"
                         : "auto.packed-experience";
-                player.sendMessage(MessageUtil.parseText(
+                MessageUtil.send(
+                        player,
                         config.formatCommandMessage(key, Map.of("amount", result.bottles()))
-                ));
+                );
             }
             if (config.auto().trigger() == Trigger.EVENT
                     && result.bottles() > 0
