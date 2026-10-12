@@ -3,6 +3,7 @@ package ru.rulhot.rexplevel.listener;
 import lombok.RequiredArgsConstructor;
 import com.destroystokyo.paper.event.entity.ExperienceOrbMergeEvent;
 import com.destroystokyo.paper.event.player.PlayerPickupExperienceEvent;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.command.CommandSender;
@@ -98,6 +99,10 @@ public final class BottleListener implements Listener {
         int points = bottles.points(item);
         if (points <= 0) {
             return;
+        }
+        if (config.returnGlassBottle()) {
+            Location location = event.getEntity().getLocation();
+            location.getWorld().dropItemNaturally(location, new ItemStack(Material.GLASS_BOTTLE));
         }
         if (config.bottle().expGive() == ExpGive.ADD) {
             event.setExperience(0);

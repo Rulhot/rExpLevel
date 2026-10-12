@@ -2,6 +2,7 @@ package ru.rulhot.rexplevel.manager;
 
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.Player;
@@ -130,6 +131,10 @@ public final class BottleManager {
         }
 
         redeem(player, bottlePoints, bottleLevels);
+        if (config.returnGlassBottle()) {
+            player.getInventory().addItem(new ItemStack(Material.GLASS_BOTTLE)).values()
+                    .forEach(rest -> player.getWorld().dropItemNaturally(player.getLocation(), rest));
+        }
         return bottlePoints;
     }
 

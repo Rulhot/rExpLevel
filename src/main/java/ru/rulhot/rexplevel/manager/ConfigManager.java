@@ -42,8 +42,8 @@ public final class ConfigManager {
 
     private static final Pattern COMMAND_NAME = Pattern.compile("^[a-z0-9_]{1,32}$");
     private static final Map<String, Integer> VERSIONS = Map.of(
-            "config.yml", 1,
-            "bottle.yml", 3,
+            "config.yml", 2,
+            "bottle.yml", 4,
             "auto.yml", 1,
             "messages.yml", 3
     );
@@ -118,6 +118,17 @@ public final class ConfigManager {
 
     public boolean isMetrics() {
         return snapshot.config().getBoolean("settings.metrics", true);
+    }
+
+    public boolean isUpdateCheck() {
+        return snapshot.config().getBoolean("settings.update-check", true);
+    }
+
+    public boolean returnGlassBottle() {
+        Snapshot current = snapshot;
+        return current.bottle().returnGlassBottle()
+                && current.bottle().requireGlassBottle()
+                && current.auto().bottle().requireGlassBottle();
     }
 
     public @NotNull BottleSettings bottle() {
@@ -340,6 +351,7 @@ public final class ConfigManager {
                 look.customModelData(),
                 maxLevels,
                 yaml.getBoolean("bottle.require-glass-bottle", true),
+                yaml.getBoolean("bottle.return-glass-bottle"),
                 readBottleRedeem(yaml.getString("bottle.redeem")),
                 readExpGive(yaml.getString("bottle.exp-give")),
                 yaml.getBoolean("bottle-create"),
@@ -406,6 +418,11 @@ public final class ConfigManager {
         if (autoLevels > bottle.maxLevels()) {
             Logger.warn("auto-convert.bottle.bottle-levels (" + autoLevels
                     + ") больше bottle.max-levels (" + bottle.maxLevels() + ")");
+        }
+        if (bottle.returnGlassBottle()
+                && !(bottle.requireGlassBottle() && auto.bottle().requireGlassBottle())) {
+            Logger.warn("bottle.return-glass-bottle не работает: require-glass-bottle выключен "
+                    + "в bottle.yml или в auto-convert.bottle");
         }
         if (bottle.create()) {
             return;
@@ -536,6 +553,7 @@ public final class ConfigManager {
                 0,
                 500,
                 true,
+                false,
                 RedeemMode.DRINK,
                 ExpGive.FOLD,
                 false,

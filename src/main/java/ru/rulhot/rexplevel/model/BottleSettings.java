@@ -16,6 +16,7 @@ public record BottleSettings(
         int customModelData,
         int maxLevels,
         boolean requireGlassBottle,
+        boolean returnGlassBottle,
         @NotNull RedeemMode redeem,
         @NotNull ExpGive expGive,
         boolean create,

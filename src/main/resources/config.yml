@@ -1,10 +1,11 @@
 settings:
   debug: false
   metrics: true
+  update-check: true
 
 commands:
   main: rexp
   aliases:
     - rx
 
-config-version: 1 #не трогать!!!
+config-version: 2 #не трогать!!!

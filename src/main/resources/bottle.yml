@@ -19,6 +19,9 @@ bottle:
   max-levels: 500
   # Нужна ли пустая стеклянная бутылка при создании кастомных через pack/auto.
   require-glass-bottle: true
+  # Возвращать ли пустую стеклянную бутылочку после использования (выпил или разбил).
+  # Работает, только если require-glass-bottle: true и здесь, и в auto.yml (auto-convert.bottle).
+  return-glass-bottle: false
   # Как забирать опыт: DRINK — ПКМ, THROW — кидок как обычный пузырёк.
   # Бросается только EXPERIENCE_BOTTLE, бутылочки из другого материала всегда выпиваются по ПКМ.
   redeem: DRINK
@@ -53,4 +56,4 @@ experience:
   # Сколько XP тратится и даётся за один обычный пузырёк опыта.
   xp-per-bottle: 7
 
-config-version: 3 #не трогать!!!
+config-version: 4 #не трогать!!!

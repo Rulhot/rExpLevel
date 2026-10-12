@@ -24,6 +24,7 @@ import ru.rulhot.rexplevel.manager.PlayerSettingsManager;
 import ru.rulhot.rexplevel.placeholder.PlaceholderHook;
 import ru.rulhot.rexplevel.util.Metrics;
 import ru.rulhot.rexplevel.util.SchedulerUtil;
+import ru.rulhot.rexplevel.util.UpdateChecker;
 import ru.rulhot.rexplevel.util.logger.Logger;
 
 import java.util.List;
@@ -60,6 +61,9 @@ public final class RExpLevel extends JavaPlugin {
         }
         if (config.isMetrics()) {
             metrics = new Metrics(this, BSTATS_ID);
+        }
+        if (config.isUpdateCheck()) {
+            new UpdateChecker(getPluginMeta().getVersion()).check();
         }
         ExpCommand command = new ExpCommand(config);
         PlayerSettingsManager settings = new PlayerSettingsManager(this, schedulerUtil);
