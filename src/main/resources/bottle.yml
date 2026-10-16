@@ -1,39 +1,23 @@
-# Если true, игрок может сам создавать бутылочку с любым уровнем опыта (до bottle.max-levels).
-# Если false — через /rexp pack bottle доступны только уровни из секции bottles.
-bottle-create: false
+bottle-create: false # true: любой уровень до max-levels, false: только уровни из bottles
 
-# Общий вид бутылочки. Используется для уровней, которых нет в секции bottles.
+# общий вид бутылочки для уровней, которых нет в bottles
 bottle:
   material: EXPERIENCE_BOTTLE
   name: "<gray>[<#b3f79c>🧪</#b3f79c>] <white>Пузырек с опытом</white> <gray>({points} xp)</gray>"
   lore:
     - ''
     - " <white>Содержит в себе: <#99ff66>{levels} LVL</white>"
-    - " <gray>Используйте ПКМ, чтобы поглотить</gray>"
+    - " <gray>Нажми ПКМ, чтобы забрать опыт</gray>"
     - ''
-  # Блеск зачарования на предмете.
   glint: true
-  # CustomModelData для ресурспака. 0 — выключено.
-  custom-model-data: 0
-  # Верхний предел уровней в одной бутылке для pack/give.
-  max-levels: 500
-  # Нужна ли пустая стеклянная бутылка при создании кастомных через pack/auto.
-  require-glass-bottle: true
-  # Возвращать ли пустую стеклянную бутылочку после использования (выпил или разбил).
-  # Работает, только если require-glass-bottle: true и здесь, и в auto.yml (auto-convert.bottle).
-  return-glass-bottle: false
-  # Как забирать опыт: DRINK — ПКМ, THROW — кидок как обычный пузырёк.
-  # Бросается только EXPERIENCE_BOTTLE, бутылочки из другого материала всегда выпиваются по ПКМ.
-  redeem: DRINK
-  # Как начисляется опыт из бутылочки:
-  # ADD — уровни плюсуются к текущим (15 lvl + бутылка 30 lvl = 45 lvl).
-  # FOLD — опыт считается в XP, как в ванилле (15 lvl + бутылка 30 lvl ≈ 33 lvl).
-  exp-give: FOLD
+  custom-model-data: 0 # 0 выключено
+  max-levels: 500 # предел уровней в одной бутылке для pack и give
+  require-glass-bottle: true # нужна ли пустая стеклянная бутылка для pack
+  return-glass-bottle: false # работает, только если require-glass-bottle: true здесь и в auto.yml
+  redeem: DRINK # DRINK: выпить по ПКМ, THROW: бросить как обычный пузырёк
+  exp-give: FOLD # ADD: уровни плюсуются к текущим, FOLD: опыт считается в XP, как в ванилле
 
-# Бутылочки с собственным видом. Ключ — уровень опыта в бутылочке (от 1 до bottle.max-levels).
-# Можно добавлять сколько угодно. Обязателен только ключ-уровень: material, name, lore,
-# glint и custom-model-data, если их не указать, берутся из секции bottle.
-# В name и lore работают {levels} и {points}. Чтобы убрать все, оставьте bottles: {}
+# свой вид по уровню, ключ это уровень. Пропущенные поля берутся из bottle, в name и lore работают {levels} и {points}
 bottles:
   15:
     material: EXPERIENCE_BOTTLE
@@ -41,7 +25,7 @@ bottles:
     lore:
       - ''
       - " <white>Содержит в себе: <#99ff66>15</#99ff66> уровней опыта"
-      - " <gray>Используйте ПКМ, чтобы использовать</gray>"
+      - " <gray>Нажми ПКМ, чтобы забрать опыт</gray>"
       - ''
   30:
     material: EXPERIENCE_BOTTLE
@@ -49,11 +33,10 @@ bottles:
     lore:
       - ''
       - " <white>Содержит в себе: <#99ff66>30</#99ff66> уровней опыта"
-      - " <gray>Используйте ПКМ, чтобы использовать</gray>"
+      - " <gray>Нажми ПКМ, чтобы забрать опыт</gray>"
       - ''
 
 experience:
-  # Сколько XP тратится и даётся за один обычный пузырёк опыта.
-  xp-per-bottle: 7
+  xp-per-bottle: 7 # XP в одном обычном пузырьке
 
-config-version: 4 #не трогать!!!
+config-version: 5 #не трогать!!!

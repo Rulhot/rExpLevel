@@ -35,10 +35,10 @@ public final class BottleManager {
         );
         ItemStack item = new ItemStack(look.material(), amount);
         item.editMeta(meta -> {
-            meta.displayName(MessageUtil.parseText(config.format(look.name(), placeholders)));
-            meta.lore(MessageUtil.parseText(look.lore().stream()
-                    .map(line -> config.format(line, placeholders))
-                    .toList()));
+            meta.displayName(MessageUtil.parseText(look.name(), placeholders));
+            meta.lore(look.lore().stream()
+                    .map(line -> MessageUtil.parseText(line, placeholders))
+                    .toList());
             meta.getPersistentDataContainer().set(pointsKey, PersistentDataType.INTEGER, points);
             meta.getPersistentDataContainer().set(levelsKey, PersistentDataType.INTEGER, levels);
             if (look.customModelData() > 0) {

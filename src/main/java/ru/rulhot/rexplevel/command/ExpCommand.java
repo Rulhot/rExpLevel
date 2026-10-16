@@ -7,7 +7,6 @@ import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.rulhot.rexplevel.manager.ConfigManager;
-import ru.rulhot.rexplevel.util.MessageUtil;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -84,6 +83,6 @@ public final class ExpCommand implements BasicCommand {
     }
 
     private void send(@NotNull CommandSender sender, @NotNull String key) {
-        MessageUtil.send(sender, config.getCommandMessage(key));
+        config.send(sender, key);
     }
 }

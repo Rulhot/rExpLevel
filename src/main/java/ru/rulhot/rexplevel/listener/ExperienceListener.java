@@ -14,7 +14,6 @@ import ru.rulhot.rexplevel.manager.ConfigManager;
 import ru.rulhot.rexplevel.model.AutoSettings.ConvertResult;
 import ru.rulhot.rexplevel.model.AutoSettings.Trigger;
 import ru.rulhot.rexplevel.model.BottleSettings.BottleMode;
-import ru.rulhot.rexplevel.util.MessageUtil;
 import ru.rulhot.rexplevel.util.SchedulerUtil;
 import ru.rulhot.rexplevel.util.SchedulerUtil.Task;
 
@@ -96,20 +95,14 @@ public final class ExperienceListener implements Listener {
             }
             ConvertResult result = autoConvert.convert(player);
             if (result.disabledNoGlass()) {
-                MessageUtil.send(
-                        player,
-                        config.formatCommandMessage("auto.disabled-no-glass", Map.of())
-                );
+                config.send(player, "auto.disabled-no-glass");
                 return;
             }
             if (result.bottles() > 0) {
                 String key = result.mode() == BottleMode.BOTTLE
                         ? "auto.packed-bottle"
                         : "auto.packed-experience";
-                MessageUtil.send(
-                        player,
-                        config.formatCommandMessage(key, Map.of("amount", result.bottles()))
-                );
+                config.send(player, key, Map.of("amount", result.bottles()));
             }
             if (config.auto().trigger() == Trigger.EVENT
                     && result.bottles() > 0

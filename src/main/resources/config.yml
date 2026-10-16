@@ -3,9 +3,9 @@ settings:
   metrics: true
   update-check: true
 
+# новое имя команды применяется после перезапуска сервера
 commands:
   main: rexp
-  aliases:
-    - rx
+  aliases: [ rx ]
 
-config-version: 2 #не трогать!!!
+config-version: 3 #не трогать!!!

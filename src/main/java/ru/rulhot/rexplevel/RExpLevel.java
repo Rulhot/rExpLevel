@@ -111,7 +111,7 @@ public final class RExpLevel extends JavaPlugin {
             Logger.setDebugEnabled(config.isDebug());
             settings.load();
         } catch (Exception exception) {
-            Logger.error("Не удалось запустить rExpLevel", exception);
+            Logger.error("Не удалось запустить rExpLevel, плагин выключен", exception);
             disable(schedulerUtil);
             return;
         }

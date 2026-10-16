@@ -11,7 +11,6 @@ import ru.rulhot.rexplevel.manager.ConfigManager;
 import ru.rulhot.rexplevel.model.AutoSettings.ConfigureStatus;
 import ru.rulhot.rexplevel.model.BottleSettings;
 import ru.rulhot.rexplevel.model.BottleSettings.BottleMode;
-import ru.rulhot.rexplevel.util.MessageUtil;
 import ru.rulhot.rexplevel.util.SchedulerUtil;
 
 import java.util.List;
@@ -61,32 +60,30 @@ public final class AutoSubCommand implements SubCommand {
             @NotNull CommandSender sender,
             @NotNull String[] args
     ) {
-        switch (args.length) {
-            case 1: {
+        return switch (args.length) {
+            case 1 -> {
                 String input = args[0].toLowerCase(Locale.ROOT);
-                return Stream.of("on", "off")
+                yield Stream.of("on", "off")
                         .filter(value -> value.startsWith(input))
                         .toList();
             }
-            case 2: {
+            case 2 -> {
                 String input = args[1].toLowerCase(Locale.ROOT);
-                return Stream.of("bottle", "experience")
+                yield Stream.of("bottle", "experience")
                         .filter(value -> value.startsWith(input))
                         .toList();
             }
-            case 3: {
+            case 3 -> {
                 if (!args[0].equalsIgnoreCase("on") || !args[1].equalsIgnoreCase("bottle")) {
-                    return List.of();
+                    yield List.of();
                 }
-                return config.bottle().presets().keySet().stream()
+                yield config.bottle().presets().keySet().stream()
                         .map(String::valueOf)
                         .filter(value -> value.startsWith(args[2]))
                         .toList();
             }
-            default: {
-                return List.of();
-            }
-        }
+            default -> List.of();
+        };
     }
 
     private void apply(@NotNull Player player, @NotNull String[] args) {
@@ -197,6 +194,6 @@ public final class AutoSubCommand implements SubCommand {
             @NotNull String key,
             @NotNull Map<String, ?> placeholders
     ) {
-        MessageUtil.send(sender, config.formatCommandMessage(key, placeholders));
+        config.send(sender, key, placeholders);
     }
 }

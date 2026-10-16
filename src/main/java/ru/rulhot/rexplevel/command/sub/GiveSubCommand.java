@@ -10,7 +10,6 @@ import ru.rulhot.rexplevel.command.SubCommand;
 import ru.rulhot.rexplevel.manager.BottleManager;
 import ru.rulhot.rexplevel.manager.ConfigManager;
 import ru.rulhot.rexplevel.model.BottleSettings;
-import ru.rulhot.rexplevel.util.MessageUtil;
 import ru.rulhot.rexplevel.util.SchedulerUtil;
 
 import java.util.List;
@@ -71,25 +70,23 @@ public final class GiveSubCommand implements SubCommand {
             @NotNull CommandSender sender,
             @NotNull String[] args
     ) {
-        switch (args.length) {
-            case 1: {
+        return switch (args.length) {
+            case 1 -> {
                 String input = args[0].toLowerCase(Locale.ROOT);
-                return plugin.getServer().getOnlinePlayers().stream()
+                yield plugin.getServer().getOnlinePlayers().stream()
                         .map(Player::getName)
                         .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(input))
                         .sorted(String.CASE_INSENSITIVE_ORDER)
                         .toList();
             }
-            case 2: {
-                return config.bottle().presets().keySet().stream()
+            case 2 -> {
+                yield config.bottle().presets().keySet().stream()
                         .map(String::valueOf)
                         .filter(value -> value.startsWith(args[1]))
                         .toList();
             }
-            default: {
-                return List.of();
-            }
-        }
+            default -> List.of();
+        };
     }
 
     private void findAndGive(
@@ -150,6 +147,6 @@ public final class GiveSubCommand implements SubCommand {
             @NotNull String key,
             @NotNull Map<String, ?> placeholders
     ) {
-        MessageUtil.send(sender, config.formatCommandMessage(key, placeholders));
+        config.send(sender, key, placeholders);
     }
 }

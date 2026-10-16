@@ -1,31 +1,19 @@
 auto-convert:
-  # Включать автоконвертацию новым игрокам сразу после входа.
-  enabled-by-default: false
-  # Режим по умолчанию: BOTTLE (кастомные) или EXPERIENCE (обычные пузырьки).
-  default-mode: BOTTLE
-  # Когда проверять опыт: EVENT — после получения XP, PERIODIC — по таймеру.
-  trigger: EVENT
-  # Пауза таймера в секундах. Работает только если trigger: PERIODIC.
-  interval-seconds: 3
+  enabled-by-default: false # включена ли автоконвертация у новых игроков
+  default-mode: BOTTLE # BOTTLE: кастомные бутылочки, EXPERIENCE: обычные пузырьки
+  trigger: EVENT # EVENT: после получения опыта, PERIODIC: по таймеру
+  interval-seconds: 3 # для PERIODIC, 1-30
 
   bottle:
-    # Сколько уровней опыта оставить игроку, остальное уйдёт в бутылки.
-    keep-levels: 30
-    # Сколько уровней класть в одну кастомную бутылку.
-    bottle-levels: 15
-    # Максимум бутылок за одну проверку автоконвертации.
-    max-bottles-per-cycle: 64
-    # Нужна ли пустая стеклянная бутылка в инвентаре для автоконвертации.
-    require-glass-bottle: true
-    # Сколько голода снимать за одну бутылку. 0 — не снимать. Можно 0.1 или 0,1.
-    hunger-per-bottle: 0
+    keep-levels: 30 # сколько уровней оставить игроку
+    bottle-levels: 15 # сколько уровней в одной бутылочке
+    max-bottles-per-cycle: 64 # максимум бутылочек за одну проверку
+    require-glass-bottle: true # нужна ли пустая стеклянная бутылка
+    hunger-per-bottle: 0 # голод за одну бутылочку, 0 не снимать, дробь через точку или запятую
 
   experience:
-    # Сколько уровней оставить игроку при автоконвертации в обычные пузырьки.
     keep-levels: 30
-    # Максимум обычных пузырьков за одну проверку.
     max-bottles-per-cycle: 64
-    # Сколько голода снимать за один обычный пузырёк. 0 — не снимать.
     hunger-per-bottle: 0
 
-config-version: 1 #не трогать!!!
+config-version: 2 #не трогать!!!

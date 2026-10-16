@@ -7,7 +7,6 @@ import org.jetbrains.annotations.NotNull;
 import ru.rulhot.rexplevel.command.SubCommand;
 import ru.rulhot.rexplevel.listener.ExperienceListener;
 import ru.rulhot.rexplevel.manager.ConfigManager;
-import ru.rulhot.rexplevel.util.MessageUtil;
 import ru.rulhot.rexplevel.util.SchedulerUtil;
 import ru.rulhot.rexplevel.util.logger.Logger;
 
@@ -64,6 +63,6 @@ public final class ReloadSubCommand implements SubCommand {
     }
 
     private void send(@NotNull CommandSender sender, @NotNull String key) {
-        MessageUtil.send(sender, config.getCommandMessage(key));
+        config.send(sender, key);
     }
 }

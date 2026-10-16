@@ -58,7 +58,6 @@ public final class UpdateChecker {
             return;
         }
         if (!isNewer(latestVersion, currentVersion)) {
-            Logger.info("Установлена актуальная версия " + currentVersion);
             return;
         }
         Logger.warn("Доступна новая версия " + latestVersion + " (установлена " + currentVersion + "): "

@@ -24,7 +24,6 @@ import ru.rulhot.rexplevel.manager.BottleManager;
 import ru.rulhot.rexplevel.manager.ConfigManager;
 import ru.rulhot.rexplevel.model.BottleSettings.ExpGive;
 import ru.rulhot.rexplevel.model.BottleSettings.RedeemMode;
-import ru.rulhot.rexplevel.util.MessageUtil;
 
 import java.util.Map;
 
@@ -160,6 +159,6 @@ public final class BottleListener implements Listener {
             @NotNull String key,
             @NotNull Map<String, ?> placeholders
     ) {
-        MessageUtil.send(sender, config.formatCommandMessage(key, placeholders));
+        config.send(sender, key, placeholders);
     }
 }

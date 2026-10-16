@@ -1,65 +1,63 @@
-prefix: "<b><gradient:#b3f79c:#b3f79c><shadow:#2D3E27:1>rExpLevel</shadow></gradient></b> <dark_gray>»</dark_gray> "
+prefix: "<b><gradient:#b3f79c:#D6FBC9><shadow:#2D3E27:1>rExpLevel</shadow></gradient></b> <dark_gray>»</dark_gray> "
 
-# Чтобы сообщение показывалось в экшен-баре (над хотбаром), а не в чате,
-# начните его с [actionbar]. Пример: "[actionbar]<white>Возвращено {points} XP."
-# В консоль такие сообщения приходят обычным текстом. На список help не действует.
+# сообщение с [actionbar] в начале показывается над хотбаром, а не в чате
 command:
-  no-permission: "{prefix}<white>Недостаточно прав."
-  player-only: "{prefix}<white>Эта команда <red>доступна</red> только игроку."
-  unknown: "{prefix}<white>Неизвестная подкоманда. Используйте <white>/{command} help</white>."
-  invalid-number: "{prefix}<white>Значение <white>{value}</white> должно быть целым положительным числом."
-  amount-limit: "{prefix}<white>За один раз можно не больше <white>{max}</white> бутылочек."
-  levels-limit: "{prefix}<white>Допустимо от <white>1</white> до <white>{max}</white> уровней."
-  player-not-found: "{prefix}<white>Игрок <white>{player}</white> не <red>найден</red>."
-  not-ready: "{prefix}<white>Плагин ещё загружает данные. Попробуйте через несколько секунд."
+  no-permission: "{prefix}<white>У тебя нет прав на это."
+  player-only: "{prefix}<white>Эта команда работает только у игрока."
+  unknown: "{prefix}<white>Такой команды нет. Список команд: <#b3f79c>/{command} help"
+  invalid-number: "{prefix}<white>Значение <#b3f79c>{value}</#b3f79c> не подходит. Введи целое положительное число."
+  amount-limit: "{prefix}<white>За один раз не больше <#b3f79c>{max}</#b3f79c> бутылочек."
+  levels-limit: "{prefix}<white>Уровней должно быть от <#b3f79c>1</#b3f79c> до <#b3f79c>{max}</#b3f79c>."
+  player-not-found: "{prefix}<white>Игрок <#b3f79c>{player}</#b3f79c> не найден."
+  not-ready: "{prefix}<white>Плагин ещё загружает данные. Подожди несколько секунд."
 
   pack:
-    usage: "{prefix}<white>Использование: <white>/{command} pack <bottle|experience> <значение> [количество]</white>"
-    not-enough: "{prefix}<white>Нужно <white>{required}</white> XP, у вас <white>{current}</white> XP."
-    not-enough-levels: "{prefix}<white>Нужно <white>{required}</white> ур., у вас <white>{current}</white> ур."
-    levels-not-allowed: "{prefix}<white>Бутылочку на <white>{value}</white> ур. создать нельзя. Доступные уровни: <white>{levels}</white>."
-    no-glass: "{prefix}<white>В инвентаре <red>нет</red> обычных пустых стеклянных бутылочек."
-    success: "[actionbar]<white>Создано <white>{amount}</white> бутылочек по <gradient:#b3f79c:#b3f79c>{levels}</gradient> ур. (<white>{points}</white> XP каждая)."
-    experience-not-enough: "{prefix}<white>Для одной обычной бутылочки требуется минимум <white>{xp} XP</white>."
-    experience-success: "[actionbar]<white>Создано <white>{amount}</white> обычных бутылочек, потрачено <white>{spent}</white> XP. Осталось <white>{remaining}</white> XP."
+    usage: "{prefix}<white>Формат команды: <#b3f79c>/{command} pack [bottle|experience] [значение] [количество]"
+    not-enough: "{prefix}<white>Нужно <#b3f79c>{required}</#b3f79c> XP, у тебя <#b3f79c>{current}</#b3f79c> XP."
+    not-enough-levels: "{prefix}<white>Нужно <#b3f79c>{required}</#b3f79c> ур., у тебя <#b3f79c>{current}</#b3f79c> ур."
+    levels-not-allowed: "{prefix}<white>Бутылочку на <#b3f79c>{value}</#b3f79c> ур. не создать. Доступные уровни: <#b3f79c>{levels}</#b3f79c>."
+    no-glass: "{prefix}<white>В инвентаре нет пустых стеклянных бутылочек."
+    success: "[actionbar]<white>Создано <#b3f79c>{amount}</#b3f79c> бутылочек по <#b3f79c>{levels}</#b3f79c> ур. (<#b3f79c>{points}</#b3f79c> XP каждая)."
+    experience-not-enough: "{prefix}<white>Для одной обычной бутылочки нужно хотя бы <#b3f79c>{xp} XP</#b3f79c>."
+    experience-success: "[actionbar]<white>Создано <#b3f79c>{amount}</#b3f79c> обычных бутылочек, потрачено <#b3f79c>{spent}</#b3f79c> XP. Осталось <#b3f79c>{remaining}</#b3f79c> XP."
 
   auto:
-    usage: "{prefix}<white>Использование: <white>/{command} auto <on|off> <bottle|experience> [уровни]</white>"
-    enabled-bottle: "{prefix}<white>Автоконвертация в кастомные бутылочки <green>включена</green>. Порог: <white>{keep}</white> ур., фасовка по <gradient:#b3f79c:#b3f79c>{levels}</gradient> ур."
-    enabled-experience: "{prefix}<white>Автоконвертация в обычные бутылочки <green>включена</green>. Порог: <white>{keep}</white> ур."
-    already-enabled-bottle: "{prefix}<white>Автоконвертация в кастомные бутылочки уже <green>включена</green>."
-    already-enabled-experience: "{prefix}<white>Автоконвертация в обычные бутылочки уже <green>включена</green>."
-    disabled-bottle: "{prefix}<white>Автоконвертация <red>выключена</red>. Выбран режим кастомных бутылочек."
-    disabled-experience: "{prefix}<white>Автоконвертация <red>выключена</red>. Выбран режим обычных бутылочек."
-    already-disabled-bottle: "{prefix}<white>Автоконвертация кастомных бутылочек уже <red>выключена</red>."
-    already-disabled-experience: "{prefix}<white>Автоконвертация обычных бутылочек уже <red>выключена</red>."
-    disabled-no-glass: "{prefix}<white>Автоконвертация <red>выключена</red>: закончились пустые стеклянные бутылочки."
-    no-glass: "{prefix}<white>Чтобы <green>включить</green> автоконвертацию, нужна хотя бы одна пустая стеклянная бутылочка."
-    mode-conflict: "{prefix}<white>Уже <green>включён</green> режим <white>{mode}</white>. Сначала выключите его: <white>/{command} auto off {mode}</white>."
-    mode-mismatch: "{prefix}<white>Сейчас <green>активен</green> режим <white>{mode}</white>. Выключайте его: <white>/{command} auto off {mode}</white>."
-    packed-bottle: "[actionbar]<white>Лишний опыт упакован в <white>{amount}</white> кастомных бутылочек."
-    packed-experience: "[actionbar]<white>Лишний опыт упакован в <white>{amount}</white> обычных бутылочек."
+    usage: "{prefix}<white>Формат команды: <#b3f79c>/{command} auto [on|off] [bottle|experience] [уровни]"
+    enabled-bottle: "{prefix}<white>Автоконвертация в кастомные бутылочки включена. Порог: <#b3f79c>{keep}</#b3f79c> ур., фасовка по <#b3f79c>{levels}</#b3f79c> ур."
+    enabled-experience: "{prefix}<white>Автоконвертация в обычные бутылочки включена. Порог: <#b3f79c>{keep}</#b3f79c> ур."
+    already-enabled-bottle: "{prefix}<white>Автоконвертация в кастомные бутылочки уже включена."
+    already-enabled-experience: "{prefix}<white>Автоконвертация в обычные бутылочки уже включена."
+    disabled-bottle: "{prefix}<white>Автоконвертация выключена. Выбран режим кастомных бутылочек."
+    disabled-experience: "{prefix}<white>Автоконвертация выключена. Выбран режим обычных бутылочек."
+    already-disabled-bottle: "{prefix}<white>Автоконвертация кастомных бутылочек уже выключена."
+    already-disabled-experience: "{prefix}<white>Автоконвертация обычных бутылочек уже выключена."
+    disabled-no-glass: "{prefix}<white>Автоконвертация выключена: закончились пустые стеклянные бутылочки."
+    no-glass: "{prefix}<white>Для автоконвертации нужна хотя бы одна пустая стеклянная бутылочка."
+    mode-conflict: "{prefix}<white>Уже включён режим <#b3f79c>{mode}</#b3f79c>. Сначала выключи его: <#b3f79c>/{command} auto off {mode}"
+    mode-mismatch: "{prefix}<white>Сейчас работает режим <#b3f79c>{mode}</#b3f79c>. Выключи его: <#b3f79c>/{command} auto off {mode}"
+    packed-bottle: "[actionbar]<white>Лишний опыт упакован в <#b3f79c>{amount}</#b3f79c> кастомных бутылочек."
+    packed-experience: "[actionbar]<white>Лишний опыт упакован в <#b3f79c>{amount}</#b3f79c> обычных бутылочек."
 
   give:
-    usage: "{prefix}<white>Использование: <white>/{command} give <игрок> <уровни> [количество]</white>"
-    sender: "{prefix}<white>Игроку <white>{player}</white> выдано <gray>{amount}</gray> бутылочек по <gradient:#b3f79c:#b3f79c>{levels}</gradient> ур."
-    target: "{prefix}<white>Вы получили <white>{amount}</white> бутылочек по <gradient:#b3f79c:#b3f79c>{levels}</gradient> ур."
+    usage: "{prefix}<white>Формат команды: <#b3f79c>/{command} give [игрок] [уровни] [количество]"
+    sender: "{prefix}<white>Игрок <#b3f79c>{player}</#b3f79c> получил <#b3f79c>{amount}</#b3f79c> бутылочек по <#b3f79c>{levels}</#b3f79c> ур."
+    target: "{prefix}<white>Ты получил <#b3f79c>{amount}</#b3f79c> бутылочек по <#b3f79c>{levels}</#b3f79c> ур."
 
   reload:
-    usage: "{prefix}<white>Использование: <white>/{command} reload</white>"
+    usage: "{prefix}<white>Формат команды: <#b3f79c>/{command} reload"
     success: "{prefix}<white>Конфигурация перезагружена."
-    failed: "{prefix}<white>Не <red>удалось</red> перезагрузить конфигурацию. Ошибка записана в консоль."
+    failed: "{prefix}<white>Конфигурация не перезагружена. Ошибка записана в консоль."
 
-  drink: "[actionbar]<white>Возвращено <white>{points}</white> XP."
-  drink-full: "{prefix}<white>У вас слишком много опыта, бутылочка не поместится."
+  drink: "[actionbar]<white>Возвращено <#b3f79c>{points}</#b3f79c> XP."
+  drink-full: "{prefix}<white>У тебя слишком много опыта, бутылочка не поместится."
 
   help:
-    - "<b><gradient:#b3f79c:#b3f79c><shadow:#2D3E27:1>rExpLevel</shadow></gradient></b> <dark_gray>— <white>опыт в бутылочках"
-    - "<white>/{command} pack bottle <уровни> [количество] <dark_gray>— <white>создать кастомные бутылочки"
-    - "<white>/{command} pack experience <XP|all> <dark_gray>— <white>создать обычные бутылочки"
-    - "<white>/{command} auto <on|off> <bottle|experience> [уровни] <dark_gray>— <white>автоконвертация"
-    - "<white>/{command} give <игрок> <уровни> [количество] <dark_gray>— <white>выдать бутылочки"
-    - "<white>/{command} reload <dark_gray>— <white>перезагрузить конфигурацию"
+    - "{prefix}<white>Команды:"
+    - " <white>/{command} pack bottle [уровни] [количество] <dark_gray>»</dark_gray> <white>создать кастомные бутылочки"
+    - " <white>/{command} pack experience [XP|all] <dark_gray>»</dark_gray> <white>создать обычные бутылочки"
+    - " <white>/{command} auto [on|off] [bottle|experience] [уровни] <dark_gray>»</dark_gray> <white>автоконвертация"
+    - " <white>/{command} give [игрок] [уровни] [количество] <dark_gray>»</dark_gray> <white>выдать бутылочки"
+    - " <white>/{command} reload <dark_gray>»</dark_gray> <white>перезагрузить конфигурацию"
 
 placeholder:
   auto-on: "on"
@@ -67,4 +65,4 @@ placeholder:
   mode-bottle: "bottle"
   mode-experience: "experience"
 
-config-version: 3 #не трогать!!!
+config-version: 4 #не трогать!!!

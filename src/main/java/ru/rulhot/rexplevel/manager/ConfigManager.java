@@ -1,10 +1,14 @@
 package ru.rulhot.rexplevel.manager;
 
 import lombok.RequiredArgsConstructor;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -17,6 +21,7 @@ import ru.rulhot.rexplevel.model.BottleSettings.ExpGive;
 import ru.rulhot.rexplevel.model.BottleSettings.Look;
 import ru.rulhot.rexplevel.model.BottleSettings.RedeemMode;
 import ru.rulhot.rexplevel.model.CommandSettings;
+import ru.rulhot.rexplevel.util.MessageUtil;
 import ru.rulhot.rexplevel.util.logger.Logger;
 
 import java.io.File;
@@ -42,12 +47,17 @@ public final class ConfigManager {
 
     private static final Pattern COMMAND_NAME = Pattern.compile("^[a-z0-9_]{1,32}$");
     private static final Map<String, Integer> VERSIONS = Map.of(
-            "config.yml", 2,
-            "bottle.yml", 4,
-            "auto.yml", 1,
-            "messages.yml", 3
+            "config.yml", 3,
+            "bottle.yml", 5,
+            "auto.yml", 2,
+            "messages.yml", 4
     );
     private static final Set<String> IGNORED_ROOTS = Set.of("bottles");
+    private static final String ACTION_BAR = "[actionbar]";
+    private static final String PREFIX_TOKEN = "{prefix}";
+    private static final String COMMAND_TOKEN = "{command}";
+    private static final Pattern HEX_TAG = Pattern.compile("</?#[0-9a-fA-F]{6}>");
+    private static final Map<String, String> CONSOLE_SYMBOLS = Map.of("»", ">");
 
     private final @NotNull JavaPlugin plugin;
 
@@ -103,7 +113,7 @@ public final class ConfigManager {
                 loadedCommands
         );
         if (!loadedCommands.equals(registeredCommands)) {
-            Logger.warn("Имена команд изменены. Перезапустите сервер, чтобы применить "
+            Logger.warn("Имена команд изменены. Перезапусти сервер, чтобы применить "
                     + loadedCommands.main() + " / " + loadedCommands.aliases());
         }
     }
@@ -151,34 +161,49 @@ public final class ConfigManager {
         return snapshot.messages().getString("placeholder." + key, "");
     }
 
-    public @NotNull String getCommandMessage(@NotNull String key) {
+    public void send(@NotNull CommandSender sender, @NotNull String key) {
+        send(sender, key, Map.of());
+    }
+
+    public void send(@NotNull CommandSender sender, @NotNull String key, @NotNull Map<String, ?> placeholders) {
         Snapshot current = snapshot;
-        return withPrefix(current, current.messages().getString("command." + key, ""));
-    }
-
-    public @NotNull String formatCommandMessage(
-            @NotNull String key,
-            @NotNull Map<String, ?> placeholders
-    ) {
-        return format(getCommandMessage(key), placeholders);
-    }
-
-    public @NotNull List<String> getCommandMessages(@NotNull String key) {
-        Snapshot current = snapshot;
-        return current.messages().getStringList("command." + key).stream()
-                .map(line -> withPrefix(current, line))
-                .toList();
-    }
-
-    public @NotNull String format(@NotNull String text, @NotNull Map<String, ?> placeholders) {
-        String formatted = text;
-        for (Map.Entry<String, ?> entry : placeholders.entrySet()) {
-            formatted = formatted.replace(
-                    "{" + entry.getKey() + "}",
-                    String.valueOf(entry.getValue())
-            );
+        String text = raw(current, key).stripLeading();
+        if (text.isEmpty()) {
+            return;
         }
-        return formatted;
+        boolean actionBar = text.regionMatches(true, 0, ACTION_BAR, 0, ACTION_BAR.length());
+        if (actionBar) {
+            text = text.substring(ACTION_BAR.length());
+        }
+        if (sender instanceof ConsoleCommandSender) {
+            String console = HEX_TAG.matcher(text.replace(PREFIX_TOKEN, "[" + plugin.getName() + "] "))
+                    .replaceAll("");
+            for (Map.Entry<String, String> symbol : CONSOLE_SYMBOLS.entrySet()) {
+                console = console.replace(symbol.getKey(), symbol.getValue());
+            }
+            sender.sendMessage(MessageUtil.parseText(console, placeholders));
+            return;
+        }
+        Component message = MessageUtil.parseText(
+                text.replace(PREFIX_TOKEN, current.messages().getString("prefix", "")), placeholders);
+        if (actionBar && sender instanceof Player player) {
+            player.sendActionBar(message);
+            return;
+        }
+        sender.sendMessage(message);
+    }
+
+    private @NotNull String raw(@NotNull Snapshot current, @NotNull String key) {
+        String path = "command." + key;
+        YamlConfiguration messages = current.messages();
+        String value = messages.isList(path)
+                ? String.join("\n", messages.getStringList(path))
+                : messages.getString(path);
+        if (value == null) {
+            Logger.warn("В messages.yml нет ключа '" + path + "'");
+            return "";
+        }
+        return value.replace(COMMAND_TOKEN, current.commands().main());
     }
 
     private void saveResource(@NotNull String name) {
@@ -300,12 +325,6 @@ public final class ConfigManager {
         }
     }
 
-    private @NotNull String withPrefix(@NotNull Snapshot current, @NotNull String text) {
-        return text
-                .replace("{prefix}", current.messages().getString("prefix", ""))
-                .replace("{command}", current.commands().main());
-    }
-
     private @NotNull CommandSettings readCommands(@NotNull YamlConfiguration yaml) {
         String main = sanitizeCommand(yaml.getString("commands.main", "rexp"), "rexp");
         LinkedHashSet<String> aliases = new LinkedHashSet<>();
@@ -327,7 +346,8 @@ public final class ConfigManager {
         }
         String value = raw.trim().toLowerCase(Locale.ROOT);
         if (!COMMAND_NAME.matcher(value).matches()) {
-            Logger.warn("Некорректное имя команды: " + raw);
+            Logger.warn("config.yml: неверное имя команды '" + raw + "', "
+                    + (fallback == null ? "пропускаю" : "беру " + fallback));
             return fallback;
         }
         return value;
@@ -372,8 +392,8 @@ public final class ConfigManager {
             ConfigurationSection preset = section.getConfigurationSection(key);
             Integer levels = parseLevels(key, maxLevels);
             if (preset == null || levels == null) {
-                Logger.warn("Пропущена бутылочка bottles." + key
-                        + ": ключ должен быть уровнем от 1 до " + maxLevels);
+                Logger.warn("bottle.yml bottles." + key + ": ключ должен быть уровнем от 1 до " + maxLevels
+                        + ", пропускаю");
                 continue;
             }
             String path = "bottles." + key;
@@ -407,7 +427,7 @@ public final class ConfigManager {
         }
         Material material = Material.matchMaterial(raw);
         if (material == null || !material.isItem() || material.isAir()) {
-            Logger.warn("Некорректный " + path + ": " + raw + ", используется " + fallback);
+            Logger.warn("Неверный " + path + ": '" + raw + "', беру " + fallback);
             return fallback;
         }
         return material;
@@ -442,7 +462,7 @@ public final class ConfigManager {
             return mode;
         }
         if (raw != null && !raw.isBlank()) {
-            Logger.warn("Неизвестный bottle.exp-give: " + raw + ", используется FOLD");
+            Logger.warn("Неизвестный bottle.exp-give '" + raw + "', беру FOLD");
         }
         return ExpGive.FOLD;
     }
@@ -453,7 +473,7 @@ public final class ConfigManager {
             return mode;
         }
         if (raw != null && !raw.isBlank()) {
-            Logger.warn("Неизвестный bottle.redeem: " + raw + ", используется DRINK");
+            Logger.warn("Неизвестный bottle.redeem '" + raw + "', беру DRINK");
         }
         return RedeemMode.DRINK;
     }
@@ -475,7 +495,7 @@ public final class ConfigManager {
             return trigger;
         }
         if (raw != null && !raw.isBlank()) {
-            Logger.warn("Неизвестный auto-convert.trigger: " + raw + ", используется EVENT");
+            Logger.warn("Неизвестный auto-convert.trigger '" + raw + "', беру EVENT");
         }
         return Trigger.EVENT;
     }
@@ -509,7 +529,7 @@ public final class ConfigManager {
                 try {
                     return Math.clamp(Double.parseDouble(normalized), 0.0D, 20.0D);
                 } catch (NumberFormatException exception) {
-                    Logger.warn("Некорректный " + path + ": " + text + ", используется 0");
+                    Logger.warn("Неверный " + path + ": '" + text + "', беру 0");
                 }
             }
         }
@@ -522,7 +542,7 @@ public final class ConfigManager {
             return mode;
         }
         if (raw != null && !raw.isBlank()) {
-            Logger.warn("Неизвестный auto-convert.default-mode: " + raw + ", используется BOTTLE");
+            Logger.warn("Неизвестный auto-convert.default-mode '" + raw + "', беру BOTTLE");
         }
         return BottleMode.BOTTLE;
     }

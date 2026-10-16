@@ -15,7 +15,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
@@ -53,16 +52,17 @@ public final class Metrics {
             config.addDefault("logResponseStatusText", false);
             config
                     .options()
-                    .header(
+                    .setHeader(java.util.List.of((
                             "bStats (https://bStats.org) collects some basic information for plugin authors, like how\n"
                                     + "many people use their plugin and their total player count. It's recommended to keep bStats\n"
                                     + "enabled, but if you're not comfortable with this, you can turn this setting off. There is no\n"
                                     + "performance penalty associated with having metrics enabled, and data sent to bStats is fully\n"
-                                    + "anonymous.")
+                                    + "anonymous.").split("\n")))
                     .copyDefaults(true);
             try {
                 config.save(configFile);
-            } catch (IOException ignored) {
+            } catch (IOException exception) {
+                Logger.warn("bStats: конфиг не сохранён");
             }
         }
         boolean enabled = config.getBoolean("enabled", true);
@@ -266,7 +266,7 @@ public final class Metrics {
                 infoLogger.accept("Sent bStats metrics data: " + data.toString());
             }
             String url = String.format(REPORT_URL, platform);
-            HttpsURLConnection connection = (HttpsURLConnection) new URL(url).openConnection();
+            HttpsURLConnection connection = (HttpsURLConnection) java.net.URI.create(url).toURL().openConnection();
             byte[] compressedData = compress(data.toString());
             connection.setRequestMethod("POST");
             connection.addRequestProperty("Accept", "application/json");

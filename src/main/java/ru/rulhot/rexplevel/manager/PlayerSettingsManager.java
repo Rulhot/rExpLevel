@@ -62,7 +62,7 @@ public final class PlayerSettingsManager {
             }
         }
         ready = true;
-        Logger.debug("Загружено настроек игроков: " + settings.size());
+        Logger.info("Загружено настроек игроков: " + settings.size());
     }
 
     public boolean isReady() {
@@ -181,7 +181,7 @@ public final class PlayerSettingsManager {
         UUID playerUuid = parseUuid(key);
         ConfigurationSection section = root.getConfigurationSection(key);
         if (playerUuid == null || section == null) {
-            Logger.warn("Пропущена некорректная запись в " + FILE_NAME + ": " + key);
+            Logger.warn("Неверная запись '" + key + "' в " + FILE_NAME + ", пропускаю");
             return;
         }
         Boolean auto = section.isBoolean("auto") ? section.getBoolean("auto") : null;

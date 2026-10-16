@@ -5,7 +5,6 @@ import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 import ru.rulhot.rexplevel.command.SubCommand;
 import ru.rulhot.rexplevel.manager.ConfigManager;
-import ru.rulhot.rexplevel.util.MessageUtil;
 
 @RequiredArgsConstructor
 public final class HelpSubCommand implements SubCommand {
@@ -25,12 +24,10 @@ public final class HelpSubCommand implements SubCommand {
     @Override
     public boolean execute(@NotNull CommandSender sender, @NotNull String[] args) {
         if (!sender.hasPermission(getPermission())) {
-            MessageUtil.send(sender, config.getCommandMessage("no-permission"));
+            config.send(sender, "no-permission");
             return true;
         }
-        config.getCommandMessages("help").stream()
-                .map(MessageUtil::parseText)
-                .forEach(sender::sendMessage);
+        config.send(sender, "help");
         return true;
     }
 }

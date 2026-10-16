@@ -9,10 +9,7 @@ import ru.rulhot.rexplevel.util.logger.impl.LegacyLogger;
 @UtilityClass
 public class Logger {
 
-    private final String INFO_PREFIX = "<green>INFO <white>";
-    private final String WARN_PREFIX = "<gold>WARN <yellow>";
-    private final String ERROR_PREFIX = "<dark_red>ERROR <red>";
-    private final String DEBUG_PREFIX = "<aqua>DEBUG <white>";
+    private final String DEBUG_PREFIX = "[debug] ";
 
     private volatile @Nullable ILogger logger;
     private volatile boolean debugEnabled;
@@ -25,31 +22,27 @@ public class Logger {
         debugEnabled = enabled;
     }
 
-    public boolean isDebugEnabled() {
-        return debugEnabled;
-    }
-
     public void info(@NotNull String message) {
         if (logger != null) {
-            logger.info(INFO_PREFIX + message);
+            logger.info(message);
         }
     }
 
     public void warn(@NotNull String message) {
         if (logger != null) {
-            logger.warn(WARN_PREFIX + message);
+            logger.warn(message);
         }
     }
 
     public void error(@NotNull String message) {
         if (logger != null) {
-            logger.error(ERROR_PREFIX + message);
+            logger.error(message);
         }
     }
 
     public void error(@NotNull String message, @NotNull Throwable throwable) {
         if (logger != null) {
-            logger.error(ERROR_PREFIX + message, throwable);
+            logger.error(message, throwable);
         }
     }
 

@@ -2,7 +2,6 @@ package ru.rulhot.rexplevel.util;
 
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import lombok.RequiredArgsConstructor;
-import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
@@ -26,55 +25,11 @@ public final class SchedulerUtil {
         plugin.getServer().getGlobalRegionScheduler().run(plugin, task -> action.run());
     }
 
-    public void runGlobalLater(@NotNull Runnable action, long delayTicks) {
-        TrackedTask wrapped = new TrackedTask();
-        ScheduledTask scheduled = plugin.getServer().getGlobalRegionScheduler().runDelayed(
-                plugin,
-                task -> {
-                    try {
-                        action.run();
-                    } finally {
-                        tracked.remove(wrapped);
-                    }
-                },
-                delayTicks
-        );
-        wrapped.bind(scheduled);
-        tracked.add(wrapped);
-    }
-
     public @NotNull Task runGlobalAtFixedRate(@NotNull Runnable action, long periodTicks) {
         long period = Math.max(1L, periodTicks);
         TrackedTask wrapped = new TrackedTask();
         ScheduledTask scheduled = plugin.getServer().getGlobalRegionScheduler()
                 .runAtFixedRate(plugin, task -> action.run(), period, period);
-        wrapped.bind(scheduled);
-        tracked.add(wrapped);
-        return wrapped;
-    }
-
-    public void runAt(@NotNull Location location, @NotNull Runnable action) {
-        plugin.getServer().getRegionScheduler().run(plugin, location, task -> action.run());
-    }
-
-    public @NotNull Task runAtLater(
-            @NotNull Location location,
-            @NotNull Runnable action,
-            long delayTicks
-    ) {
-        TrackedTask wrapped = new TrackedTask();
-        ScheduledTask scheduled = plugin.getServer().getRegionScheduler().runDelayed(
-                plugin,
-                location,
-                task -> {
-                    try {
-                        action.run();
-                    } finally {
-                        tracked.remove(wrapped);
-                    }
-                },
-                delayTicks
-        );
         wrapped.bind(scheduled);
         tracked.add(wrapped);
         return wrapped;

@@ -2,38 +2,38 @@ package ru.rulhot.rexplevel.util;
 
 import lombok.experimental.UtilityClass;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 @UtilityClass
 public class MessageUtil {
 
     private final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
-    private final String ACTION_BAR = "[actionbar]";
+    private final String TAG_PREFIX = "rexp_";
 
     public @NotNull Component parseText(@NotNull String text) {
         return MINI_MESSAGE.deserialize(text)
                 .decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE);
     }
 
-    public void send(@NotNull CommandSender sender, @NotNull String text) {
-        String trimmed = text.stripLeading();
-        boolean actionBar = trimmed.regionMatches(true, 0, ACTION_BAR, 0, ACTION_BAR.length());
-        if (actionBar && sender instanceof Player player) {
-            player.sendActionBar(parseText(trimmed.substring(ACTION_BAR.length())));
-            return;
+    public @NotNull Component parseText(@NotNull String text, @NotNull Map<String, ?> placeholders) {
+        TagResolver.Builder resolvers = TagResolver.builder();
+        String prepared = text;
+        for (Map.Entry<String, ?> entry : placeholders.entrySet()) {
+            String tag = TAG_PREFIX + entry.getKey().toLowerCase(Locale.ROOT).replace('-', '_');
+            prepared = prepared.replace("{" + entry.getKey() + "}", "<" + tag + ">");
+            resolvers.resolver(entry.getValue() instanceof ComponentLike component
+                    ? Placeholder.component(tag, component)
+                    : Placeholder.unparsed(tag, String.valueOf(entry.getValue())));
         }
-        sender.sendMessage(parseText(actionBar ? trimmed.substring(ACTION_BAR.length()) : text));
-    }
-
-    public @NotNull List<Component> parseText(@NotNull List<String> lines) {
-        return lines.stream()
-                .map(MessageUtil::parseText)
-                .toList();
+        return MINI_MESSAGE.deserialize(prepared, resolvers.build())
+                .decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE);
     }
 }
